@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "boring-avatars";
 import {
   FaRegCircleXmark,
@@ -13,14 +13,89 @@ import Controls from "./controls";
 import Modal from "./modal";
 
 import { User } from "./types/user";
+import useFieldStore from "./store/useFieldStore";
+import { useDirectionStore } from "./store/useDirectionStore";
 
 export type GalleryProps = {
   users: User[];
 };
 const Gallery = ({ users }: GalleryProps) => {
-  const [usersList, setUsersList] = useState(users);
+  const [usersList, setUsersList] = useState<User[]>(users);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { field } = useFieldStore();
+  const { direction } = useDirectionStore();
+
+  useEffect(() => {
+    const handleFieldChange = () => {
+      if (field.value === "name") {
+        setUsersList(
+          [...usersList].sort((a, b) => {
+            const comparison = a.name.localeCompare(b.name);
+            return direction.value === "ascending" ? comparison : -comparison;
+          })
+        );
+      } else if (field.value === "company") {
+        setUsersList(
+          [...usersList].sort((a, b) => {
+            const comparison = a.company.name.localeCompare(b.company.name);
+            return direction.value === "ascending" ? comparison : -comparison;
+          })
+        );
+      } else {
+        setUsersList(
+          [...usersList].sort((a, b) => {
+            const comparison = a.email.localeCompare(b.email);
+            return direction.value === "ascending" ? comparison : -comparison;
+          })
+        );
+      }
+    };
+
+    handleFieldChange();
+  }, [field]);
+
+  useEffect(() => {
+    const handleDirectionChange = () => {
+      if (field.value == "name") {
+        if (direction.value == "ascending") {
+          setUsersList(
+            [...usersList].sort((a, b) => a.name.localeCompare(b.name))
+          );
+        } else {
+          setUsersList(
+            [...usersList].sort((a, b) => b.name.localeCompare(a.name))
+          );
+        }
+      } else if (field.value == "company") {
+        if (direction.value == "ascending") {
+          setUsersList(
+            [...usersList].sort((a, b) =>
+              a.company.name.localeCompare(b.company.name)
+            )
+          );
+        } else {
+          setUsersList(
+            [...usersList].sort((a, b) =>
+              b.company.name.localeCompare(a.company.name)
+            )
+          );
+        }
+      } else if (field.value == "email") {
+        if (direction.value == "ascending") {
+          setUsersList(
+            [...usersList].sort((a, b) => a.email.localeCompare(b.email))
+          );
+        } else {
+          setUsersList(
+            [...usersList].sort((a, b) => b.email.localeCompare(a.email))
+          );
+        }
+      }
+    };
+
+    handleDirectionChange();
+  }, [direction]);
 
   const handleModalOpen = (id: number) => {
     const user = usersList.find((item) => item.id === id) || null;
@@ -103,7 +178,7 @@ const Gallery = ({ users }: GalleryProps) => {
                     <FaPhone className="icon" />
                     <div className="value">{selectedUser.phone}</div>
                   </div>
-                  <div className="fields">
+                  <div className="field">
                     <FaEnvelope className="icon" />
                     <div className="value">{selectedUser.email}</div>
                   </div>
