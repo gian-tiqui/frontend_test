@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa6";
 
 import Modal from "./modal";
-
+//
 import { User } from "./types/user";
 
 export type GalleryProps = {
