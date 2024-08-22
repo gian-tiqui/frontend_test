@@ -2,9 +2,10 @@ import Image from "next/image";
 import styles from "./page.module.css";
 
 import Gallery from "./gallery";
+import { User } from "./types/user";
 
 export default function Home() {
-  const users = [
+  const users: User[] = [
     {
       id: 1,
       name: "Leanne Graham",
