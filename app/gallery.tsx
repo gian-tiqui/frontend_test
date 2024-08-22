@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "boring-avatars";
 import {
   FaRegCircleXmark,
@@ -12,19 +12,45 @@ import {
 import Modal from "./modal";
 
 import { User } from "./types/user";
+import axios from "axios";
 
 export type GalleryProps = {
   users: User[];
 };
 const Gallery = ({ users }: GalleryProps) => {
-  const [usersList, setUsersList] = useState(users);
+  const [usersList, setUsersList] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [hasError, setHasError] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const usersData = (
+          await axios.get("https://jsonplaceholder.typicode.com/users")
+        ).data as User[];
+        setUsersList(usersData);
+      } catch (error: unknown) {
+        console.log(error);
+        setHasError(true);
+        setLoading(false);
+      } finally {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleModalOpen = (id: number) => {
     const user = usersList.find((item) => item.id === id) || null;
 
-    if(user) {
+    if (user) {
       setSelectedUser(user);
       setIsModalOpen(true);
     }
@@ -39,26 +65,38 @@ const Gallery = ({ users }: GalleryProps) => {
     <div className="user-gallery">
       <h1 className="heading">Users</h1>
       <div className="items">
-        {usersList.map((user, index) => (
-          <div
-            className="item user-card"
-            key={index}
-            onClick={() => handleModalOpen(user.id)}
-          >
-            <div className="body">
-              <Avatar
-                size={96}
-                name={user.name}
-                variant="marble"
-                colors={["#92A1C6", "#146A7C", "#F0AB3D", "#C271B4", "#C20D90"]}
-              />
+        {loading && <p>Loading users...</p>}
+        {hasError && (
+          <p>Looks like there was a problem in fetching the users...</p>
+        )}
+        {usersList.length > 0 &&
+          !loading &&
+          usersList.map((user, index) => (
+            <div
+              className="item user-card"
+              key={index}
+              onClick={() => handleModalOpen(user.id)}
+            >
+              <div className="body">
+                <Avatar
+                  size={96}
+                  name={user.name}
+                  variant="marble"
+                  colors={[
+                    "#92A1C6",
+                    "#146A7C",
+                    "#F0AB3D",
+                    "#C271B4",
+                    "#C20D90",
+                  ]}
+                />
+              </div>
+              <div className="info">
+                <div className="name">{user.name}</div>
+                <div className="company">{user.company.name}</div>
+              </div>
             </div>
-            <div className="info">
-              <div className="name">{user.name}</div>
-              <div className="company">{user.company.name}</div>
-            </div>
-          </div>
-        ))}
+          ))}
         <Modal isOpen={isModalOpen} onClose={handleModalClose}>
           <div className="user-panel">
             <div className="header">
@@ -99,7 +137,7 @@ const Gallery = ({ users }: GalleryProps) => {
                     <FaPhone className="icon" />
                     <div className="value">{selectedUser.phone}</div>
                   </div>
-                  <div className="fields">
+                  <div className="field">
                     <FaEnvelope className="icon" />
                     <div className="value">{selectedUser.email}</div>
                   </div>
